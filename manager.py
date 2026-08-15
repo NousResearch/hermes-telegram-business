@@ -412,12 +412,17 @@ class BusinessModeManager:
             await answer(text="That draft has already been resolved.")
             return True
 
-        # Only the owner of this connection may act on the buttons.
+        # Only the owner of this connection may act on the buttons. Reject
+        # whenever the caller's identity doesn't match the connection owner —
+        # including when caller_user_id is missing/falsy. The previous
+        # `caller_user_id and ...` form skipped this check entirely for a
+        # falsy caller_user_id, which is a fail-open authorization bug: it
+        # would let anyone act on the draft instead of rejecting them.
         conn = self._db.get_telegram_business_connection(draft["connection_id"])
         if not conn:
             await answer(text="Connection no longer exists.")
             return True
-        if caller_user_id and str(caller_user_id) != str(conn.get("owner_user_id")):
+        if str(caller_user_id) != str(conn.get("owner_user_id")):
             await answer(text="⛔ Only the connected account owner can use these buttons.")
             return True
 
