@@ -539,6 +539,33 @@ class TestCallbackDispatch:
         assert db.get_telegram_business_draft(did)["status"] == "pending"
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize("falsy_caller", [None, ""])
+    async def test_callback_rejects_falsy_caller(self, db, falsy_caller):
+        """Regression: a missing/falsy caller_user_id must be rejected.
+
+        The owner check was previously ``caller_user_id and ... != owner``,
+        so a falsy caller_user_id skipped the check entirely (fail-open).
+        """
+        mgr, sender = _make_manager(db)
+        await mgr.handle_connection_update(_fake_business_connection())
+        await mgr.handle_business_message(_fake_business_message())
+        sender.calls.clear()
+        draft = db.get_pending_telegram_business_drafts_for_owner("100")[0]
+        did = draft["draft_id"]
+        answered: List[Dict[str, Any]] = []
+
+        async def _answer(**kw): answered.append(kw)
+        async def _edit(**kw): pass
+
+        await mgr.handle_callback(
+            data=f"bd:send:{did}", caller_user_id=falsy_caller,
+            answer=_answer, edit_message_text=_edit,
+        )
+        assert answered and "Only the connected account owner" in answered[0]["text"]
+        assert db.get_telegram_business_draft(did)["status"] == "pending"
+        assert not any(c.get("chat_id") == 200 for c in sender.calls)
+
+    @pytest.mark.asyncio
     async def test_send_blocked_when_can_reply_false(self, db):
         mgr, sender = _make_manager(db)
         await mgr.handle_connection_update(_fake_business_connection(can_reply=False))
