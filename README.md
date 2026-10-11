@@ -1,3 +1,8 @@
+> [!IMPORTANT]
+> **This repo has moved.** The plugin now lives in [`NousResearch/hermes-official-plugins/telegram-business`](https://github.com/NousResearch/hermes-official-plugins/tree/main/telegram-business), the single repo for Nous's official Hermes plugins. Its history, open issues and pull requests went with it, and this repo is archived.
+>
+> Already installed? `hermes plugins update` moves you to the new home automatically. New install: `hermes plugins install` from the plugin catalog.
+
 # hermes-telegram-business
 
 **Observe-with-approval Telegram Business Mode (secretary bot) for [Hermes Agent](https://github.com/NousResearch/hermes-agent).**
